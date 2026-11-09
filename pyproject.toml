@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "compwaffle"
+version = "0.1.1"
+description = "Rounded, fractional-cell Matplotlib waffle charts with composition scales"
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+keywords = ["matplotlib", "waffle", "composition", "reference-parts", "visualization"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering :: Visualization",
+]
+dependencies = ["matplotlib>=3.7"]
+
+[project.optional-dependencies]
+examples = ["pandas>=2"]
+dev = ["pytest>=8", "pandas>=2"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+compwaffle = ["stylelib/*.mplstyle"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"

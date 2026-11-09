@@ -1,0 +1,8 @@
+figure.facecolor: 0.10
+axes.facecolor: 0.10
+savefig.facecolor: 0.10
+font.size: 10
+text.color: 0.93
+axes.labelcolor: 0.93
+svg.fonttype: none
+pdf.fonttype: 42

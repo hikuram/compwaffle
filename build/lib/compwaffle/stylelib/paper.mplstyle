@@ -1,0 +1,10 @@
+# Standard Matplotlib rcParams only. Waffle-specific properties use WaffleStyle.
+figure.facecolor: white
+axes.facecolor: white
+savefig.facecolor: white
+savefig.bbox: tight
+font.size: 10
+text.color: 0.18
+axes.labelcolor: 0.18
+svg.fonttype: none
+pdf.fonttype: 42

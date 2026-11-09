@@ -1,0 +1,8 @@
+cw_draw_row(
+    xl("table!$B2:$H2", headers=False),
+    xl("waffle!$B$7:$H$7", headers=False),
+    xl("waffle!$B$4:$H$5", headers=False),
+    xl("waffle!$B$8:$H$8", headers=False),
+    xl("waffle!$B$14:$H$14", headers=False),
+    xl("waffle!$K$2:$K$12", headers=False),
+)

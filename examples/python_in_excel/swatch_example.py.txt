@@ -1,0 +1,6 @@
+cw_legend_swatch(
+    xl("waffle!B$7", headers=False),
+    xl("waffle!B$4:B$5", headers=False),
+    xl("waffle!B$8", headers=False),
+    xl("waffle!$K$2:$K$12", headers=False),
+)
