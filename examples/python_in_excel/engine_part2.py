@@ -21,6 +21,7 @@ def cw_draw_row(values_input, colors_input, shapes_input, hatches_input,
     default_bend = _cw_setting(opts[8],_CW_ROUND)
     show_scale = int(_cw_setting(opts[9],0))
     canvas_cols = int(_cw_setting(opts[10],32))
+    hatch_shift = _cw_hatch_shift(opts)
     if ncols < 1 or canvas_cols < 1 or cell_w <= 0 or cell_h <= 0 or gap < 0:
         raise ValueError('invalid waffle size settings')
     corners = corners.reshape(2,count)
@@ -51,9 +52,10 @@ def cw_draw_row(values_input, colors_input, shapes_input, hatches_input,
         for k,a,b in seg:
             hidx=int(_cw_setting(hatch_codes[k],0))
             hatch = _CW_HATCHES[hidx] if 0<=hidx<len(_CW_HATCHES) else ''
+            rgb = _cw_rgb(packed[k])
             rect=Rectangle((left+a*cell_w,0),(b-a)*cell_w,cell_h,
-                           facecolor=_cw_rgb(packed[k]),
-                           edgecolor='#263445' if hatch else 'none',
+                           facecolor=rgb,
+                           edgecolor=_cw_tone_rgb(rgb,hatch_shift) if hatch else 'none',
                            linewidth=0,hatch=hatch or None,zorder=3)
             rect.set_clip_path(bg)
             ax.add_patch(rect)
@@ -74,6 +76,9 @@ def cw_legend_swatch(color_input, shape_input, hatch_input, options_input):
     shape=_cw_nums(shape_input)
     hatch_code=int(_cw_setting(_cw_nums(hatch_input)[0],0))
     opts=_cw_nums(options_input)
+    if opts.size < 11:
+        raise ValueError('missing global numeric settings')
+    hatch_shift=_cw_hatch_shift(opts)
     span=_cw_setting(shape[0],_cw_setting(opts[7],0.15))
     bend=_cw_setting(shape[1],_cw_setting(opts[8],_CW_ROUND))
     hatch = _CW_HATCHES[hatch_code] if 0 <= hatch_code < len(_CW_HATCHES) else ''
@@ -81,8 +86,9 @@ def cw_legend_swatch(color_input, shape_input, hatch_input, options_input):
     fig.patch.set_facecolor('white')
     ax.set_position([0,0,1,1])
     path=_cw_path(0.04,0.04,0.92,0.92,span,bend)
-    ax.add_patch(PathPatch(path,facecolor=_cw_rgb(rgb),
-                           edgecolor='#263445' if hatch else 'none',
+    fill_rgb=_cw_rgb(rgb)
+    ax.add_patch(PathPatch(path,facecolor=fill_rgb,
+                           edgecolor=_cw_tone_rgb(fill_rgb,hatch_shift) if hatch else 'none',
                            linewidth=0,hatch=hatch or None))
     ax.set(xlim=(0,1),ylim=(0,1))
     ax.axis('off')

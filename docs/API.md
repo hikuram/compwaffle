@@ -1,4 +1,4 @@
-# API reference (v0.1.1)
+# API reference (v0.1.2)
 
 ## `build_layout(data, *, mode='percent', rows=1, columns=20, value_per_cell=None, unit=None, order='row', max_cells=5000)`
 
@@ -23,7 +23,8 @@ WaffleStyle(
     color_map=None,     # category: color
     shape_map=None,     # category: (span, bend) or CornerShape(...)
     hatch_map=None,     # category: Matplotlib hatch string or None
-    hatch_color="#263445",
+    hatch_color=None,           # auto from each fill; a color overrides this
+    hatch_tone_shift=-30.0,     # -100 (black) .. +100 (white)
     edgecolor="white", linewidth=0.55,
     empty_color="#EDF1F5",
 )
@@ -40,7 +41,7 @@ Numeric geometry is **relative cell units**. In `draw_waffle()`, the `scale` mul
 
 `cell_path` provides the generated closed `matplotlib.path.Path`, suitable for downstream `PathPatch` clipping. `WaffleStyle.shape_map` may use `CornerShape` objects or `(span, bend)` tuples. For a fully occupied single-category cell the per-category shape applies; mixed or partially filled cells use the common default shape.
 
-`WaffleStyle.color_map`, `.shape_map`, and `.hatch_map` are **independent**. `colors=` at the plotting-function level overrides `color_map` only. `hatch_map` accepts Matplotlib hatch strings such as `/`, `..`, `x`, `||` or `None`. Hatch colors can be set globally with `WaffleStyle.hatch_color`, including in grayscale mode. The legend reflects all three encodings.
+`WaffleStyle.color_map`, `.shape_map`, and `.hatch_map` are **independent**. `colors=` at the plotting-function level overrides `color_map` only. `hatch_map` accepts Matplotlib hatch strings such as `/`, `..`, `x`, `||` or `None`. By default, hatch ink is derived from each resolved cell color using `hatch_tone_shift=-30` (30% toward black in RGB). Negative values darken, positive values lighten, and `0` leaves the color unchanged; the permitted range is `-100` to `+100` (inclusive). This is an RGB shade/tint operation, not a perceptual luminance adjustment. `hatch_color` set to a Matplotlib color explicitly overrides the automatic hatch color for all categories. Swatches use the same rule as chart segments. The legend reflects all three encodings.
 
 ## `draw_waffle(ax, layout, palette, *, x=0, y=0, scale=1, style=None)`
 

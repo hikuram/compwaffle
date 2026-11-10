@@ -31,7 +31,8 @@ color_style = WaffleStyle(
 gray_style = WaffleStyle(
     corner_span=.10, corner_bend=.55,
     color_map=dict(zip(CATEGORIES, ("#F2F2F2", "#D8D8D8", "#BFBFBF", "#A0A0A0", "#818181"))),
-    shape_map=shapes, hatch_map=hatches, edgecolor="#606060", hatch_color="#303030",
+    shape_map=shapes, hatch_map=hatches, edgecolor="#606060",
+    hatch_color="#303030",  # explicitly shared hatch ink for grayscale
 )
 for name, style in (("shape_color_preview", color_style), ("shape_grayscale_preview", gray_style)):
     with plt.rc_context({"figure.facecolor": "#FFFFFF", "axes.facecolor": "#FFFFFF",

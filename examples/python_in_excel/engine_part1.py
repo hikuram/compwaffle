@@ -1,8 +1,8 @@
-"""compwaffle v0.1.1-compatible inline engine for Python in Excel.
+"""compwaffle v0.1.2-compatible inline engine for Python in Excel.
 
 This code accepts only numeric Excel inputs. Material and specimen names remain
 in ordinary Excel cells, never passed through xl() to this engine.
-Core path/clip/fractional-fill behavior adapted from compwaffle v0.1.1.
+Core path/clip/fractional-fill behavior adapted from compwaffle v0.1.2.
 """
 import math
 import numpy as np
@@ -45,8 +45,26 @@ def _cw_rgb(packed):
             (packed & 255) / 255)
 
 
+def _cw_tone_rgb(rgb, shift):
+    """RGB shade/tint for hatch ink; matches compwaffle.colors.shift_tone."""
+    if not math.isfinite(shift) or not -100 <= shift <= 100:
+        raise ValueError('hatch_tone_shift must be finite and in [-100, 100]')
+    fraction = shift / 100.0
+    if fraction < 0:
+        return tuple(channel * (1 + fraction) for channel in rgb)
+    return tuple(channel + (1 - channel) * fraction for channel in rgb)
+
+
+def _cw_hatch_shift(options):
+    # Older 11-element setting vectors are still supported.
+    shift = _cw_setting(options[11], -30.0) if len(options) > 11 else -30.0
+    if not -100 <= shift <= 100:
+        raise ValueError('hatch_tone_shift must be in [-100, 100]')
+    return shift
+
+
 def _cw_path(left, bottom, width, height, span, bend):
-    """v0.1.1 four-corner cubic mask; negative bend gives recesses."""
+    """v0.1.2 four-corner cubic mask; negative bend gives recesses."""
     span, bend = float(span), float(bend)
     if not (0 <= span <= 0.5 and -1 <= bend <= 1):
         raise ValueError('corner_span in [0,.5], corner_bend in [-1,1]')
@@ -83,7 +101,7 @@ def _cw_path(left, bottom, width, height, span, bend):
 
 
 def _cw_fills(raw, *, mode, ncols, value_per_cell, ref_weights):
-    """Exact cumulative component boundaries, equivalent to v0.1.1 core."""
+    """Exact cumulative component boundaries, equivalent to v0.1.2 core."""
     if len(raw) == 0 or not np.all(np.isfinite(raw)) or np.any(raw < 0):
         raise ValueError('composition must contain finite nonnegative numbers')
     total = float(math.fsum(raw))

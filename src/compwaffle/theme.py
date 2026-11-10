@@ -35,6 +35,5 @@ def adapt_cell_style(style: WaffleStyle) -> WaffleStyle:
         replacements['empty_color'] = '#2B3649'
     if style.edgecolor == default.edgecolor:
         replacements['edgecolor'] = '#17202E'
-    if style.hatch_color == default.hatch_color:
-        replacements['hatch_color'] = '#DCE5F1'
+    # Hatch ink derives from each cell's fill color, regardless of the theme.
     return replace(style, **replacements) if replacements else style

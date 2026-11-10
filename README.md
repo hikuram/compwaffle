@@ -1,6 +1,6 @@
 # compwaffle
 
-**Initial public release: v0.1.1 (GitHub source).** Rounded, fractional-cell waffle charts for Matplotlib, with normalized and variable-length composition scales.
+**v0.1.2 (GitHub source; initial public release was v0.1.1).** Rounded, fractional-cell waffle charts for Matplotlib, with normalized and variable-length composition scales.
 
 A cell can be divided among multiple categories without rounding their individual shares. Cell boundaries are cubic Bézier paths (`PathPatch`), with configurable convex or concave corners. Categories can be distinguished independently by color, shape, and hatch pattern.
 
@@ -10,7 +10,7 @@ A cell can be divided among multiple categories without rounding their individua
 
 - One-row waffles (20 cells by default) or configurable multirow grids, dimensions, spacing, and fill order.
 - Fractional fills clipped to a single cell mask, including boundaries shared by multiple categories.
-- Signed corner bend (−1 to +1), corner span, style presets, colors, and hatch patterns.
+- Signed corner bend (−1 to +1), corner span, style presets, colors, and hatch patterns, with automatic per-color hatch darkening.
 - Normalized percentages or absolute quantities with automatic variable-length rows and a shared scale.
 - Conversion to parts relative to one or more selected reference categories, without implicit material-specific assumptions; mass-to-volume conversion with supplied densities.
 - Titles, labels, legends, numeric scale for one-row charts, and experimental `waffle_table()` with property columns and optional row stripes.
@@ -64,6 +64,7 @@ style = WaffleStyle(
         "Category B": CornerShape(0.10, -0.80),
     },
     hatch_map={"Category A": None, "Category B": "//"},
+    hatch_tone_shift=-30,  # auto hatch ink 30% toward black
 )
 records = [
     {"label": "01", "composition": {"Category A": 75, "Category B": 25}},
@@ -73,7 +74,7 @@ fig, ax = waffle_table(records, style=style, show_stripes=False)
 fig.savefig("comparison.svg")
 ```
 
-`corner_span` is a fraction of the shorter cell dimension (0–0.5). `corner_bend` is in −1..+1: negative values recess the corners, zero makes straight chamfers, approximately 0.5523 makes circular-looking rounding. Only the corner regions change, so cell areas are close but not identical. Mixed or partial cells use the shared default mask to avoid gaps at internal boundaries. Shapes, colors, and hatches are resolved independently.
+`corner_span` is a fraction of the shorter cell dimension (0–0.5). `corner_bend` is in −1..+1: negative values recess the corners, zero makes straight chamfers, approximately 0.5523 makes circular-looking rounding. Only the corner regions change, so cell areas are close but not identical. Mixed or partial cells use the shared default mask to avoid gaps at internal boundaries. Shapes, colors, and hatches are resolved independently. Hatch ink defaults to 30% darker than each resolved fill color (`hatch_tone_shift=-30`): -100 is black, 0 keeps the fill color, and +100 is white. This is RGB mixing, not perceptual lightness. Set `hatch_color="#263445"` to override with a single shared color. The chart and legend use the same rule; the Python in Excel example uses `K13` for the same setting.
 
 Matplotlib controls the figure and axes backgrounds (`figure.facecolor`, `axes.facecolor`); `show_stripes=False` disables alternating table rows.
 

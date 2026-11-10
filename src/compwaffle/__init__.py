@@ -5,7 +5,7 @@ from .transforms import parts_per_reference, mass_to_volume_parts
 from .plotting import waffle
 from .table import waffle_table
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 __all__ = [
     "CellFill", "WaffleLayout", "WaffleStyle", "CornerShape", "cell_path", "build_layout",
     "draw_waffle", "parts_per_reference", "mass_to_volume_parts",

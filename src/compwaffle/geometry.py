@@ -16,6 +16,7 @@ from matplotlib.path import Path
 from matplotlib.patches import PathPatch, Rectangle
 
 from .core import WaffleLayout
+from .colors import shift_tone
 
 
 # Cubic Bezier control-distance ratio for a quarter-circle approximation.
@@ -58,6 +59,8 @@ class WaffleStyle:
     ``corner_radius`` remains for compatibility with v0.1.0 and is measured
     in cell units. If ``corner_span`` is set, it overrides the old radius and
     is relative to the shorter cell dimension; both use ``corner_bend``.
+    Hatch ink is automatically shaded per resolved fill color using
+    ``hatch_tone_shift``; ``hatch_color`` explicitly overrides it.
     """
 
     cell_width: float = 1.0
@@ -73,7 +76,8 @@ class WaffleStyle:
     color_map: Mapping[str, str] | None = None
     shape_map: Mapping[str, CornerShape | tuple[float, float]] | None = None
     hatch_map: Mapping[str, str | None] | None = None
-    hatch_color: str = "#263445"
+    hatch_color: str | None = None
+    hatch_tone_shift: float = -30.0
 
     def __post_init__(self) -> None:
         names = ("cell_width", "cell_height", "gap_x", "gap_y",
@@ -106,6 +110,8 @@ class WaffleStyle:
                     or any(ch not in r"/\\|-+xoO.*" for ch in pattern)
                 ):
                     raise ValueError("invalid hatch; use Matplotlib hatch characters")
+        if not math.isfinite(self.hatch_tone_shift) or not -100 <= self.hatch_tone_shift <= 100:
+            raise ValueError("hatch_tone_shift must be finite and in [-100, 100]")
 
     def default_shape(self) -> CornerShape:
         short = min(self.cell_width, self.cell_height)
@@ -121,6 +127,11 @@ class WaffleStyle:
         if self.hatch_map is None:
             return None
         return self.hatch_map.get(category) or None
+
+    def hatch_color_for(self, fill_color: object) -> object:
+        """Use an explicit hatch color, or shade/tint the resolved fill color."""
+        return (self.hatch_color if self.hatch_color is not None
+                else shift_tone(fill_color, self.hatch_tone_shift))
 
     @classmethod
     def preset(cls, name: str) -> "WaffleStyle":
@@ -206,7 +217,7 @@ def draw_swatch(ax: Axes, category: str, color: object,
     hatch = style.hatch_for(category)
     ax.add_patch(PathPatch(
         path, facecolor=color,
-        edgecolor=style.hatch_color if hatch else "none",
+        edgecolor=style.hatch_color_for(color) if hatch else "none",
         linewidth=0, hatch=hatch, zorder=3,
     ))
     ax.add_patch(PathPatch(
@@ -269,7 +280,7 @@ def draw_waffle(
                 (left + segment.start * w, bottom),
                 (segment.end - segment.start) * w, h,
                 facecolor=palette[segment.key],
-                edgecolor=style.hatch_color if hatch else "none",
+                edgecolor=style.hatch_color_for(palette[segment.key]) if hatch else "none",
                 linewidth=0, hatch=hatch, zorder=3,
             )
             part.set_clip_path(background)

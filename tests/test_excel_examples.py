@@ -60,6 +60,6 @@ def test_excel_cell_references():
     swatch = (EXCEL / 'swatch_example.py.txt').read_text(encoding='utf-8')
     assert 'table!$B2:$H2' in row
     assert 'waffle!$B$4:$H$5' in row
-    assert 'waffle!$K$2:$K$12' in row
+    assert 'waffle!$K$2:$K$13' in row
     assert 'waffle!B$4:B$5' in swatch
-    assert 'waffle!$K$2:$K$12' in swatch
+    assert 'waffle!$K$2:$K$13' in swatch
