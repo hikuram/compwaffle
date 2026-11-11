@@ -70,7 +70,45 @@ An editable version is included at [`examples/python_in_excel/build_from_csv.py`
 
 `hatch_tone_shift=-30` shades hatch ink 30% toward black relative to its fill color. Allowed values are -100 (black) through +100 (white); this is an RGB interpolation, not perceptual lightness. Changing the value in the worksheet requires Python in Excel recalculation.
 
+For readability, the setting hints in column D do not wrap, and component
+settings and legend cells (columns B onward within their sections) are
+right-aligned in generated workbooks.
+
 The builder currently supports **1–16 contiguous composition columns** and **1–256 selected data rows**. Source CSV sheets can contain other columns and additional rows. Each selected component must contain a finite, nonnegative number and each composition must have a positive total.
+
+## Recalculation and transferring finished charts
+
+The generated `waffle` sheet is a **rendering workspace**, not the recommended
+location for day-to-day formulation management. Python in Excel recalculates
+its PY cells sequentially when inputs they depend on change. A workbook with
+many charts can therefore feel slow during further editing.
+
+A practical workflow is:
+
+1. Keep the original formulation workbook as the working source of truth.
+2. Generate a compwaffle workbook from an exported CSV, then finish the
+   component/plot settings and allow the PY figures to calculate.
+3. Copy **only the finished visualizations** back to the original workbook as
+   static output. In Excel, choose **Python Output → Excel Value** for an
+   in-cell plot before trying **Paste Special → Values** at the destination.
+   Confirm that the pasted cell is an image and not a formula containing `PY`.
+   If a given Excel version does not retain the picture when pasting values,
+   use **Copy as Picture / Paste as Picture** instead, which creates a static
+   picture over cells; arrange it to suit the destination layout.
+4. Continue editing the original workbook; regenerate the static figures when
+   the underlying compositions actually change.
+
+If the user has a **Python in Excel add-on license**, Excel's
+**Formulas → Calculation Options** may offer **Partial** or **Manual** mode
+(`F9` to recalculate when ready). Standard Python in Excel availability supports
+**Automatic** mode, so the builder intentionally leaves `calcMode=auto`
+instead of forcing a setting that some users cannot use. Excel desktop
+calculation settings can affect other open workbooks, so check the setting
+before changing it.
+
+References: [Microsoft — Recalculation](https://support.microsoft.com/en-us/excel/python/get-started-with-python-in-excel),
+[Python in Excel availability](https://support.microsoft.com/en-us/excel/python/python-in-excel-availability), and
+[Create plots and charts](https://support.microsoft.com/en-us/excel/python/create-plots-and-charts-with-python-in-excel).
 
 ## Excel compatibility and privacy
 

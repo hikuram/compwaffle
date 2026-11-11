@@ -15,6 +15,10 @@
   tone shift. All CSV data are copied to a `table` worksheet.
 - Included generic CSV examples, a Python configuration script, regression
   tests, and updated documentation of Python in Excel limitations/privacy.
+- Improved generated workbook readability: non-wrapping setting hints in
+  column D and right-aligned component settings/legend in columns B onward.
+- Documented the recommended static-chart transfer workflow to avoid
+  unneeded Python in Excel recalculation during routine spreadsheet edits.
 - The PY workbook generator is based on a compatibility profile validated in
   Microsoft 365 Excel for a small diagnostic workbook. Other Excel builds or
   tenants have not been independently verified.

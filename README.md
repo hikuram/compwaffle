@@ -70,7 +70,14 @@ build_excel_workbook("input.csv", "output.xlsx", config)
 ```
 
 The CSV itself may contain additional columns and rows. Component columns are
-selected explicitly rather than inferred from names. 
+selected explicitly rather than inferred from names. Python in Excel sends
+code and referenced data to Microsoft's cloud service at recalculation time.
+
+**Workflow:** the generated workbook is intended for visualization, not continuous
+editing of formulation data. Copy completed plots as static images into the
+original workbook. Python in Excel recalculation may run after changes to
+its dependent cells; Partial/Manual calculation modes require the optional
+Python in Excel add-on. The generated sheet leaves Automatic mode enabled.
 
 For the range conventions, workbook layout, security considerations and
 troubleshooting, see [CSV to Python in Excel](docs/EXCEL.md).

@@ -715,23 +715,23 @@ def make_waffle(rows: list[list[str]], settings: Settings, info: dict) -> bytes:
             head = rows[settings.header_row - 1][src_col - 1] if settings.header_row else ""
             name = head or f"Component {i + 1}"
             if rn == 20:
-                cell(r,col,rn,name,style=8)
+                cell(r,col,rn,name,style=13)
             elif rn == 21:
-                cell(r,col,rn,info["colors"][i],style=5)
+                cell(r,col,rn,info["colors"][i],style=12)
             elif rn == 22:
-                cell(r,col,rn,info["spans"][i],style=5)
+                cell(r,col,rn,info["spans"][i],style=12)
             elif rn == 23:
-                cell(r,col,rn,info["bends"][i],style=5)
+                cell(r,col,rn,info["bends"][i],style=12)
             elif rn == 24:
-                cell(r,col,rn,info["hatches"][i],style=5)
+                cell(r,col,rn,info["hatches"][i],style=12)
             elif rn == 25:
                 cell(r,col,rn,formula=f"IFERROR(HEX2DEC(RIGHT({letter}21,6)),0)",
-                     cached=int(info["colors"][i][1:],16),style=10)
+                     cached=int(info["colors"][i][1:],16),style=14)
             elif rn == 26:
                 cell(r,col,rn,formula=hatch_formula(letter),
-                     cached=HATCH_CODES.index(info["hatches"][i]),style=10)
+                     cached=HATCH_CODES.index(info["hatches"][i]),style=14)
             elif rn == 28:
-                cell(r,col,rn,info["weights"][i],style=5)
+                cell(r,col,rn,info["weights"][i],style=12)
     section(data, 30, "LEGEND", last_col, merges)
     r32 = etree.SubElement(data, Q(S, "row"), r="32", ht="24", customHeight="1")
     cell(r32, 1, 32, "Component", style=4)
@@ -741,11 +741,11 @@ def make_waffle(rows: list[list[str]], settings: Settings, info: dict) -> bytes:
         col = 2 + i
         letter = col_letter(col)
         source_name = rows[settings.header_row-1][info["left"]+i-1] if settings.header_row else ""
-        cell(r32, col, 32, formula=f"{letter}20", cached=source_name or f"Component {i + 1}",style=8)
+        cell(r32, col, 32, formula=f"{letter}20", cached=source_name or f"Component {i + 1}",style=13)
         formula = (f"_xlfn._xlws.PY(2,0,waffle!{letter}$25,"
                    f"waffle!{letter}$22:{letter}$23,waffle!{letter}$26,"
                    f"waffle!$B$4:$B$15)")
-        cell(r33,col,33,formula=formula,py_cell=True,style=9)
+        cell(r33,col,33,formula=formula,py_cell=True,style=15)
     section(data, 35, "COMPOSITION VISUALIZATION", last_col, merges)
     header_row = etree.SubElement(data, Q(S, "row"), r="36", ht="29", customHeight="1")
     id_label = (rows[settings.header_row-1][col_index(settings.sample_id_column)-1]
@@ -868,7 +868,7 @@ def make_styles() -> bytes:
     etree.SubElement(border,Q(S,"diagonal"))
     sxfs=etree.SubElement(root,Q(S,"cellStyleXfs"),count="1")
     etree.SubElement(sxfs,Q(S,"xf"),numFmtId="0",fontId="0",fillId="0",borderId="0")
-    xfs=etree.SubElement(root,Q(S,"cellXfs"),count="12")
+    xfs=etree.SubElement(root,Q(S,"cellXfs"),count="16")
     # Format IDs used by make_table / make_waffle.
     definitions=[
         (0,0,0,"left"),  # 0 normal
@@ -883,13 +883,23 @@ def make_styles() -> bytes:
         (0,0,0,"center"),# 9 PY result
         (0,5,0,"general"),# 10 computed numeric
         (0,0,1,"general"),# 11 output linked data
+        (5,4,0,"right"),  # 12 per-component editable values
+        (4,3,0,"right"),  # 13 component / legend labels
+        (0,5,0,"right"),  # 14 per-component calculated numeric values
+        (0,0,0,"right"),  # 15 Python legend swatches
     ]
-    for font,fill,border,halign in definitions:
+    for style_id, (font,fill,border,halign) in enumerate(definitions):
         xf=etree.SubElement(xfs,Q(S,"xf"),numFmtId="0",fontId=str(font),fillId=str(fill),
                             borderId=str(border),xfId="0",applyFont="1",applyFill="1",
                             applyBorder="1",applyAlignment="1")
-        etree.SubElement(xf,Q(S,"alignment"),horizontal=halign,vertical="center",
-                         **({"wrapText":"1"} if halign=="left" else {}))
+        alignment = {"horizontal": halign, "vertical": "center"}
+        if style_id == 6:
+            # Setting hints in column D should stay on a single line.
+            alignment["wrapText"] = "0"
+        elif halign == "left" or style_id == 13:
+            # Keep wrapped component names while changing their alignment.
+            alignment["wrapText"] = "1"
+        etree.SubElement(xf, Q(S, "alignment"), **alignment)
     cstyles=etree.SubElement(root,Q(S,"cellStyles"),count="1")
     etree.SubElement(cstyles,Q(S,"cellStyle"),name="Normal",xfId="0",builtinId="0")
     return xml_bytes(root)

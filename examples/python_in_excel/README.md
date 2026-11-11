@@ -21,3 +21,8 @@ python examples/python_in_excel/build_from_csv.py
 Generated workbooks require a supported Microsoft 365 Python in Excel session
 to recalculate the embedded plots. The generator builds but does not execute
 Python cloud formulas. See [`docs/EXCEL.md`](../../docs/EXCEL.md).
+
+For everyday spreadsheet work, treat the generated workbook as a rendering
+workspace. Copy completed waffle images back to the original spreadsheet
+rather than copying live PY formulas. See the [recalculation and static-image
+workflow](../../docs/EXCEL.md#recalculation-and-transferring-finished-charts).
