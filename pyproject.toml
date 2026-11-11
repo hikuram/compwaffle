@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "compwaffle"
-version = "0.1.2"
-description = "Rounded, fractional-cell Matplotlib waffle charts with composition scales"
+version = "0.1.3"
+description = "Rounded fractional-cell waffle charts and Python in Excel CSV workbook generator"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
-keywords = ["matplotlib", "waffle", "composition", "reference-parts", "visualization"]
+keywords = ["matplotlib", "waffle", "composition", "reference-parts", "visualization", "python-in-excel"]
 classifiers = [
   "Development Status :: 3 - Alpha",
   "Programming Language :: Python :: 3",
@@ -19,7 +19,11 @@ dependencies = ["matplotlib>=3.7"]
 
 [project.optional-dependencies]
 examples = ["pandas>=2"]
-dev = ["pytest>=8", "pandas>=2"]
+excel = ["lxml>=4.9"]
+dev = ["pytest>=8", "pandas>=2", "lxml>=4.9", "openpyxl>=3.1"]
+
+[project.scripts]
+compwaffle-excel = "compwaffle.excel:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

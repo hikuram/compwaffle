@@ -1,6 +1,6 @@
 # compwaffle
 
-**v0.1.2 (GitHub source; initial public release was v0.1.1).** Rounded, fractional-cell waffle charts for Matplotlib, with normalized and variable-length composition scales.
+**v0.1.3 (GitHub source; initial public release was v0.1.1).** Rounded, fractional-cell waffle charts for Matplotlib, with normalized and variable-length composition scales.
 
 A cell can be divided among multiple categories without rounding their individual shares. Cell boundaries are cubic Bézier paths (`PathPatch`), with configurable convex or concave corners. Categories can be distinguished independently by color, shape, and hatch pattern.
 
@@ -15,6 +15,7 @@ A cell can be divided among multiple categories without rounding their individua
 - Conversion to parts relative to one or more selected reference categories, without implicit material-specific assumptions; mass-to-volume conversion with supplied densities.
 - Titles, labels, legends, numeric scale for one-row charts, and experimental `waffle_table()` with property columns and optional row stripes.
 - PNG, SVG, and PDF output; normal Matplotlib `.mplstyle` and `rc_context` support.
+- **New in v0.1.3:** template-free CSV-to-XLSX generator for Python in Excel; supports up to 16 components and 256 plotted compositions, with English workbook labels.
 
 ## Install
 
@@ -33,7 +34,46 @@ python examples/concrete_slump.py
 python examples/shape_styles.py
 ```
 
-The core drawing package has no pandas dependency; the CSV example uses pandas.
+The core drawing package has no pandas dependency; the CSV plotting example uses pandas. The Python in Excel generator uses optional `lxml`.
+
+## Python in Excel: create a workbook from CSV (v0.1.3)
+
+Install the optional Excel generator and use the command line:
+
+```bash
+python -m pip install -e '.[excel]'
+compwaffle-excel examples/python_in_excel/example_generic_7.csv -o waffle.xlsx
+```
+
+The workbook is generated **without any XLSX template**. It contains a `table`
+sheet with the CSV data and a `waffle` sheet with editable styles, legend,
+selected evaluation columns, and native Python in Excel plot cells. The drawing
+engine is embedded in the file; **local compwaffle is not required to open or
+recalculate it**. A supported Microsoft 365 Excel environment with Python in
+Excel enabled is required to execute the embedded plots.
+
+For custom CSV ranges and plotting options, write a short Python script:
+
+```python
+from dataclasses import replace
+from compwaffle.excel import ExcelSettings, build_excel_workbook
+
+base = ExcelSettings()
+config = replace(
+    base,
+    composition_range="B2:Q257",        # 16 components, 256 data rows
+    sample_id_column="A",
+    evaluation_columns=("R", "S", "T"),
+    options={**base.options, "hatch_tone_shift": -30},
+)
+build_excel_workbook("input.csv", "output.xlsx", config)
+```
+
+The CSV itself may contain additional columns and rows. Component columns are
+selected explicitly rather than inferred from names. 
+
+For the range conventions, workbook layout, security considerations and
+troubleshooting, see [CSV to Python in Excel](docs/EXCEL.md).
 
 ## Normalized waffle
 
@@ -74,7 +114,7 @@ fig, ax = waffle_table(records, style=style, show_stripes=False)
 fig.savefig("comparison.svg")
 ```
 
-`corner_span` is a fraction of the shorter cell dimension (0–0.5). `corner_bend` is in −1..+1: negative values recess the corners, zero makes straight chamfers, approximately 0.5523 makes circular-looking rounding. Only the corner regions change, so cell areas are close but not identical. Mixed or partial cells use the shared default mask to avoid gaps at internal boundaries. Shapes, colors, and hatches are resolved independently. Hatch ink defaults to 30% darker than each resolved fill color (`hatch_tone_shift=-30`): -100 is black, 0 keeps the fill color, and +100 is white. This is RGB mixing, not perceptual lightness. Set `hatch_color="#263445"` to override with a single shared color. The chart and legend use the same rule; the Python in Excel example uses `K13` for the same setting.
+`corner_span` is a fraction of the shorter cell dimension (0–0.5). `corner_bend` is in −1..+1: negative values recess the corners, zero makes straight chamfers, approximately 0.5523 makes circular-looking rounding. Only the corner regions change, so cell areas are close but not identical. Mixed or partial cells use the shared default mask to avoid gaps at internal boundaries. Shapes, colors, and hatches are resolved independently. Hatch ink defaults to 30% darker than each resolved fill color (`hatch_tone_shift=-30`): -100 is black, 0 keeps the fill color, and +100 is white. This is RGB mixing, not perceptual lightness. Set `hatch_color="#263445"` to override with a single shared color. The chart and legend use the same rule; the v0.1.3 generated workbook uses `waffle!B15` for the same setting.
 
 Matplotlib controls the figure and axes backgrounds (`figure.facecolor`, `axes.facecolor`); `show_stripes=False` disables alternating table rows.
 

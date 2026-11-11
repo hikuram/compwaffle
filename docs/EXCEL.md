@@ -1,18 +1,96 @@
-# Python in Excel（任意の組成データを1行1画像で表示）
+# Python in Excel: CSV workbook builder
 
-Python in Excelにはローカルにインストールした`compwaffle`を直接読み込めないため、`examples/python_in_excel/`の**移植版描画コード**をExcelのPYセルへ登録します。標準のライブラリをそのままインポートする方法ではありません。
+`compwaffle` v0.1.3 can produce a **ready-to-recalculate Python in Excel workbook** from any CSV whose component columns and drawing range you specify. No XLSX template, Office automation, or local Excel installation is required to **generate** the workbook. The output is English-first and has two worksheets:
 
-1. Excelで、元データの数値列を`table!B:H`（2行目以降）に置き、`waffle`シートに設定欄を作る（材料名などの文字列はExcel側で管理）。
-2. `waffle!K1` に「数式 → Pythonの挿入」で`engine_part1.py`、`waffle!K15`に`engine_part2.py`を登録。各コードはExcelの数式文字数制限を考慮して分割済み。
-3. `waffle!B20` に`row_example.py.txt`をPYコードとして登録し、**Python出力 → Excel値**に変更。画像をセル内に表示して、B21以降へ**PYセル自体をコピー**する。
-4. 任意の凡例は`waffle!B17`へ`swatch_example.py.txt`を登録し、右方向にコピーする。
+- **`table`**: every CSV row and column, in original order. Excel-compatible numeric values become numbers; identifiers with leading zeros stay text. CSV headers and user data are not translated.
+- **`waffle`**: editable global settings, up to 16 per-component colors/shapes/hatches, legend, and one Python plot per selected data row (up to 256). Selected evaluation columns are linked as ordinary worksheet cells.
 
-**参照の固定：** 行ごとに変わる数値データは`table!$B2:$H2`（列固定／行相対）。スタイル設定は`waffle!$B$7:$H$7`などの絶対参照。凡例だけは`waffle!B$4:B$5`のように列相対／行固定とする。
+The workbook embeds a Matplotlib drawing engine adapted from compwaffle; **Excel does not need to import the compwaffle package**. The local generator requires `lxml`, while the Python plots run in Microsoft 365's Python in Excel service (NumPy and Matplotlib are available in that environment).
 
-**設定例：** 色の16進表示をB3に置いた場合、B7に`=HEX2DEC(RIGHT(B3,6))`を指定し、右へコピーします。ハッチ番号は0=なし、2=`//`、12=`..`、14=`xx`など（`engine_part1.py`の`_CW_HATCHES`の順序）。`K2:K13`の既定値の例は`0, 20, 1, 0.78, 0.12, 0.18, 100, 0.10, 0.55, 0, 32, -30`です。
+## Installation
 
-**設定範囲：** `B4:H5`は角の変形、`B7:H7`は数値化したRGB、`B8:H8`はハッチ番号、`B14:H14`は基準量の重み、`K2:K13`は表示モード・セル数・寸法・スケール・ハッチング明暗調整の数値です。実際のカテゴリ数と参照範囲は同数に揃えてください。`K2` は0=比率、1=絶対量、2=任意基準量100への換算です。`K13` は「ハッチング明暗調整」（`hatch_tone_shift`）で、-100（黒）～+100（白）、既定値-30です。RGB値を黒または白へ補間する方式です。塗りつぶし色ごとに計算し、凡例も同じ色になります。旧来の11項目（`K2:K12`）を渡した場合も内部で-30を使いますが、新規設定では`K2:K13`を参照してください。
+```bash
+python -m pip install 'compwaffle[excel]'
+```
 
-**クラウド処理の注意：** Python in ExcelはMicrosoft Cloudで実行されます。サンプルでは`xl()`の参照を数値範囲だけに限定していますが、**Pythonコードと参照された数値はクラウドに送信されます**。機密データをクラウド処理できない場合は通常のローカルPython版を使用してください。ExcelのPYセルは必ずExcel上で作成し、外部のxlsx生成ライブラリからPY専用の内部構造を書き換えないでください。
+This adds `lxml` for the workbook generator. The ordinary Matplotlib charting functions of compwaffle are unchanged.
 
-Microsoft公式: [Pythonの挿入](https://support.microsoft.com/ja-jp/excel/python/get-started-with-python-in-excel) / [グラフをセル内に表示](https://support.microsoft.com/ja-jp/excel/python/create-plots-and-charts-with-python-in-excel)。
+## CLI
+
+For the included generic 7-component example:
+
+```bash
+compwaffle-excel examples/python_in_excel/example_generic_7.csv -o waffle.xlsx
+```
+
+For a CSV with 16 component columns and 256 compositions:
+
+```bash
+compwaffle-excel examples/python_in_excel/example_capacity_16x256.csv \
+  -o waffle_16.xlsx \
+  --composition-range B2:Q257 \
+  --evaluation-columns R,S,T
+```
+
+To disable metric columns, pass `--evaluation-columns -`; to number plots sequentially instead of copying sample IDs, pass `--sample-id-column -`. The default component range is `B2:H` and the default metric columns are `I,J,K`. Use `compwaffle-excel --help` for CSV encoding, delimiter and header options.
+
+## Python API / editable settings
+
+For full control of colors, hatches, corner geometry, reference weights, and global options, set up a short Python script. Do **not** edit code installed inside `site-packages`.
+
+```python
+from dataclasses import replace
+from compwaffle.excel import ExcelSettings, build_excel_workbook
+
+settings = replace(
+    ExcelSettings(),
+    composition_range='B2:Q257',
+    sample_id_column='A',
+    evaluation_columns=('R', 'S', 'T'),
+    fill_colors=('#4477AA', '#66A6A0', '#DDAA55', '#88B4D8') * 4,
+    hatches=('//', '..', '', '/') * 4,
+    options={**ExcelSettings().options, 'hatch_tone_shift': -30},
+)
+result = build_excel_workbook('data.csv', 'waffle.xlsx', settings)
+print(result)
+```
+
+An editable version is included at [`examples/python_in_excel/build_from_csv.py`](../examples/python_in_excel/build_from_csv.py). These columns and settings refer to the copied `table` worksheet. `composition_range` may omit the final row (`B2:H`) to include all subsequent data rows; `B2:H257` includes exactly 256 rows.
+
+## Worksheet layout
+
+| Range | Contents |
+| --- | --- |
+| `waffle!B3` and `B17` | Embedded Python engine / draw-function definitions |
+| `waffle!B4:B15` | 12 global drawing options, including `hatch_tone_shift` |
+| `waffle!B20:Q28` | Up to 16 component names, colors, corner shapes, hatches, and reference weights |
+| `waffle!B33:Q33` | Python-generated legend swatches |
+| `waffle!A36` onward | Sample IDs, row plots, selected metric columns |
+| `table!A1` onward | Imported CSV data |
+
+`hatch_tone_shift=-30` shades hatch ink 30% toward black relative to its fill color. Allowed values are -100 (black) through +100 (white); this is an RGB interpolation, not perceptual lightness. Changing the value in the worksheet requires Python in Excel recalculation.
+
+The builder currently supports **1–16 contiguous composition columns** and **1–256 selected data rows**. Source CSV sheets can contain other columns and additional rows. Each selected component must contain a finite, nonnegative number and each composition must have a positive total.
+
+## Excel compatibility and privacy
+
+The generated workbook contains native PY cells, `xl/python.xml`, and the rich-value structures used for Python figure outputs. It pins the Python environment definition observed in **multiple Excel-created workbooks**:
+
+`{882DD1B0-6546-4DFA-8A08-902A380B44EA}`
+
+This is an **environment compatibility identifier, not a secret or user credential**. On the tested Microsoft 365 installation, arbitrary UUID v4 substitutions produced `#BLOCKED!`; restoring this Excel-authored environment definition was necessary to execute the charts. The resulting structure was tested in a small workbook. **Microsoft has not promised that this environment ID will remain usable across every tenant, release channel, or future version.** Using this identifier does not bypass licensing, access permissions, connected-service settings, or security policies. The optional initialization code is the standard Excel Python startup configuration, not account-specific data.
+
+Generated workbooks should be opened in a **supported Microsoft 365 Excel version with Python in Excel enabled** and recalculated there. The generator itself cannot execute those cloud formulas, and a syntactically valid XLSX is not proof that Python will run on every installation. Files downloaded from the internet may open in Protected View and be unable to recalculate until trusted through normal Excel controls.
+
+**Data handling:** Microsoft 365 sends Python source code and referenced numeric inputs to its cloud Python execution service when recalculated. For confidential data that cannot be processed by that service, use the ordinary local Matplotlib API instead. The generator copies the entire CSV into the workbook but Python `xl()` references are restricted to numerical component and style settings. This does not mean the workbook is free of potentially sensitive data; evaluate the complete CSV before sharing it.
+
+Avoid opening and **resaving** these PY-enabled workbooks with `openpyxl`, LibreOffice, or other generic XLSX writers: they may remove or rewrite Python-specific parts. `openpyxl` read-only inspection is useful, but this generator builds the OOXML package directly with `lxml` to preserve the required structure.
+
+## Troubleshooting
+
+- **`#BLOCKED!` / unsupported Python environment:** verify Excel can run a newly created Python cell, then compare the generated workbook. Check organization security settings, Protected View, and Python availability. Do not replace the fixed environment GUID with a random UUID.
+- **Wrong components/metrics:** inspect `composition_range`, `sample_id_column`, `evaluation_columns`, and the original CSV headers.
+- **Nothing drawn:** ensure all selected data are nonnegative numbers and selected rows have a positive total.
+- **Visual changes do not appear:** recalculate the Python cells in a Python-enabled Excel session; local generation only prepares the workbook.
+
+See [Microsoft's Python in Excel troubleshooting](https://support.microsoft.com/en-us/excel/python/troubleshoot-python-in-excel-errors) and the [OOXML Python environment specification](https://learn.microsoft.com/en-us/openspecs/office_standards/ms-xlsx/1c0b3d12-5f97-46c2-a8e2-5a2e4171df63).

@@ -1,6 +1,6 @@
 # compwaffle — Matplotlibによる端数対応ワッフルチャート
 
-**v0.1.2（初回公開はv0.1.1、GitHubソース配布）**。配合・構成比などの数値を、角丸セルと端数セルで表すMatplotlibライブラリです。
+**v0.1.3（初回公開はv0.1.1、GitHubソース配布）**。配合・構成比などの数値を、角丸セルと端数セルで表すMatplotlibライブラリです。
 
 ![公開データセットを用いた比率比較表](docs/images/concrete_percent.png)
 
@@ -13,6 +13,7 @@
 - 比率を100%に正規化するモードと、量を維持する可変長モード。
 - 任意の成分（複数も可）を基準量100とする換算、密度を与えた質量→体積換算。
 - 凡例、スケール、コメント、物性列付きの比較表。交互行背景は`show_stripes=False`で無効化可能。
+- **v0.1.3：** CSVからテンプレートなしでPython in Excel用XLSXを生成（最大16成分・256配合）。
 
 ## インストールと確認
 
@@ -22,6 +23,28 @@ python -m pytest -q
 python examples/concrete_slump.py
 python examples/shape_styles.py
 ```
+
+## CSVからPython in Excel対応ブックを生成
+
+```bash
+python -m pip install -e '.[excel]'
+compwaffle-excel examples/python_in_excel/example_generic_7.csv -o waffle.xlsx
+```
+
+`table`シートへCSVの全列・全行をコピーし、`waffle`シートに設定、凡例、PYセル、評価値列を生成します。外部XLSXテンプレートは不要です。配合として可視化する列範囲と評価値列はPython側で明示的に指定します。
+
+```python
+from dataclasses import replace
+from compwaffle.excel import ExcelSettings, build_excel_workbook
+
+base = ExcelSettings()
+settings = replace(base, composition_range="B2:Q257",
+                   evaluation_columns=("R", "S", "T"),
+                   options={**base.options, "hatch_tone_shift": -30})
+build_excel_workbook("input.csv", "output.xlsx", settings)
+```
+
+Excel用の`lxml`はオプション依存です。出力したブックには描画コードが内蔵されますが、PYセルの実行にはMicrosoft 365の対応環境が必要です。Pythonコードや参照数値はクラウドで処理されます。詳細は[Excel向け手順（英語）](docs/EXCEL.md)を参照してください。
 
 ## 基本例
 
@@ -63,7 +86,7 @@ fig, ax = waffle_table(records, style=style, show_stripes=False)
 
 個別形状は単一カテゴリの完全セルに適用し、端数・混在セルには共通マスクを使います。角の変形範囲を小さくすると面積差を抑えられますが、厳密に等面積ではありません。
 
-ハッチング色は塗りつぶし色ごとに算出し、`hatch_tone_shift=-30`（RGBで黒へ30%寄せる）が既定値です。指定範囲は-100（黒）～+100（白）、0で元の色と一致します。知覚上の輝度ではなくRGBの明暗調整です。`hatch_color="#263445"`など明示した色を優先できます。Python in Excel版でも`K13`の明暗調整で同じ挙動となり、凡例にも適用します。
+ハッチング色は塗りつぶし色ごとに算出し、`hatch_tone_shift=-30`（RGBで黒へ30%寄せる）が既定値です。指定範囲は-100（黒）～+100（白）、0で元の色と一致します。知覚上の輝度ではなくRGBの明暗調整です。`hatch_color="#263445"`など明示した色を優先できます。Python in Excelの生成ブックでは`waffle!B15`で同じ明暗調整を指定でき、凡例にも適用します。
 
 ![形状とハッチングによるグレースケール表示](docs/images/shape_grayscale_preview.png)
 

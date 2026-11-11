@@ -1,4 +1,4 @@
-# API reference (v0.1.2)
+# API reference (v0.1.3)
 
 ## `build_layout(data, *, mode='percent', rows=1, columns=20, value_per_cell=None, unit=None, order='row', max_cells=5000)`
 
@@ -76,3 +76,17 @@ Experimental comparison table. `records` can be an iterable (sequence) of mappin
 ## Matplotlib `mplstyle`
 
 `.mplstyle` can set only standard Matplotlib `rcParams`, e.g. fonts, face colors, figure DPI, vector-font handling. It cannot configure `WaffleStyle`'s `corner_radius` and `gap_x` because those are custom library options. Use a `WaffleStyle` object or a preset for cell geometry.
+
+## `compwaffle.excel` — Python in Excel workbook generation (v0.1.3)
+
+Requires the optional dependency `lxml` (`pip install 'compwaffle[excel]'`). The generated workbook is self-contained and does not require the local compwaffle package at Excel runtime.
+
+- **`ExcelSettings`**: frozen dataclass containing `composition_range`, `sample_id_column`, `evaluation_columns`, `evaluation_labels`, `header_row`, `fill_colors`, `hatches`, `corner_spans`, `corner_bends`, `reference_weights`, `options`, `csv_encoding`, and `csv_delimiter`. Its default values illustrate the seven-component CSV example.
+- **`build_excel_workbook(csv_file, output_file, settings=None)`**: generate an XLSX file from a CSV and return a dictionary with `rows`, `columns`, `components`, `draw_rows`, `python_cells`, and `output`. The source CSV is copied into the `table` worksheet. Numeric data cells are converted to Excel numbers where safely representable.
+- **`compwaffle-excel`**: CLI with `--composition-range`, `--sample-id-column`, `--evaluation-columns`, `--header-row`, `--csv-encoding`, `--csv-delimiter`, and `--output`. Full appearance customization is available via `ExcelSettings` in a Python script.
+
+The generator is limited to **16 contiguous component columns** and **256 data rows** per visualization. `composition_range='B2:H'` uses all remaining CSV data rows; a fully qualified range such as `B2:Q257` selects an exact interval. The workbook writes its settings to `waffle!B4:B15` and a maximum of 274 PY cells.
+
+The `options` dict uses exactly these ordered keys: `mode`, `cells_per_100`, `cell_width`, `cell_height`, `horizontal_gap`, `vertical_gap`, `value_per_cell`, `corner_span`, `corner_bend`, `show_scale`, `canvas_columns`, and `hatch_tone_shift`. `hatch_tone_shift` uses -100..+100 with default -30.
+
+The builder preserves an Excel-authored Python environment compatibility identifier (`{882DD1B0-6546-4DFA-8A08-902A380B44EA}`), which is **not** a user access token. The environment was validated in a small Microsoft 365 diagnostic workbook, but PY execution cannot be verified locally and is not guaranteed in every tenant. See [docs/EXCEL.md](EXCEL.md) for compatibility, cloud processing, and detailed usage.

@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.1.3 — Python in Excel CSV workbook builder
+
+- Integrated the template-free, English-first CSV-to-XLSX generator as
+  `compwaffle.excel` with `ExcelSettings`, `build_excel_workbook`, and the
+  `compwaffle-excel` command-line entry point.
+- Added optional `lxml` dependency via `pip install 'compwaffle[excel]'`.
+  The core Matplotlib library and its public drawing API remain compatible.
+- Embedded a self-contained PY plotting engine with an Excel-authored Python
+  environment compatibility identifier and standard initialization code.
+  No source XLSX template or local import of compwaffle into Excel is required.
+- Supports 1–16 selected component columns and 1–256 selected data rows, with
+  user-selected sample IDs, evaluation columns, component styles, and hatch
+  tone shift. All CSV data are copied to a `table` worksheet.
+- Included generic CSV examples, a Python configuration script, regression
+  tests, and updated documentation of Python in Excel limitations/privacy.
+- The PY workbook generator is based on a compatibility profile validated in
+  Microsoft 365 Excel for a small diagnostic workbook. Other Excel builds or
+  tenants have not been independently verified.
+
 ## v0.1.2 — Hatch tone adjustment
 
 - Hatch ink now defaults to a per-category RGB shade derived from the resolved fill color.
