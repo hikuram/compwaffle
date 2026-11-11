@@ -92,6 +92,33 @@ class BuilderTests(unittest.TestCase):
         self.assertEqual(w['waffle']['A19'].value,'COMPONENT SETTINGS')
         self.assertTrue(w['waffle']['B37'].value.text.startswith('=_xlfn._xlws.PY'))
 
+    def test_waffle_hint_and_component_alignment(self):
+        from openpyxl import load_workbook
+        headers = ['Sample'] + [f'C{i}' for i in range(1, 17)]
+        path = self.csv('format.csv', headers, [['A'] + [1] * 16])
+        cfg = replace(builder.Settings(), composition_range='B2:Q2',
+                      evaluation_columns=())
+        output = self.folder / 'format.xlsx'
+        builder.build(path, output, cfg)
+        wb = load_workbook(output, read_only=True)
+        ws = wb['waffle']
+        # Only D-column setting hints should stop wrapping. Other left-aligned
+        # headings and labels keep their original layout.
+        for ref in ('D3', 'D4', 'D15', 'D17'):
+            self.assertFalse(ws[ref].alignment.wrap_text, ref)
+            self.assertEqual(ws[ref].alignment.horizontal, 'left', ref)
+        self.assertTrue(ws['A4'].alignment.wrap_text)
+        self.assertEqual(ws['B4'].alignment.horizontal, 'general')
+        for col in ('B', 'Q'):
+            for rn in (20, 21, 22, 23, 24, 25, 26, 28, 32, 33):
+                ref = f'{col}{rn}'
+                self.assertEqual(ws[ref].alignment.horizontal, 'right', ref)
+        self.assertTrue(ws['B20'].alignment.wrap_text)
+        self.assertTrue(ws['B32'].alignment.wrap_text)
+        self.assertEqual(ws['B37'].alignment.horizontal, 'center')
+        self.assertEqual(wb['table']['B1'].alignment.horizontal, 'left')
+        wb.close()
+
     def test_full_16_components_256_rows(self):
         headers=['Sample'] + [f'Component {i:02d}' for i in range(1,17)] + ['Score 1','Score 2','Score 3']
         data=[]
